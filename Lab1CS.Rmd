@@ -1,0 +1,148 @@
+---
+title: "Computational Statistics lab 1"
+author: "Shwetha , Suhani and Hoda"
+date: "11/4/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Question 1: Be careful when comparing
+
+Two code snippets are mentioned in the question.
+Snippet 1 : 
+```{r}
+x1 = 1/3 
+x2 = 1/4
+if ( x1-x2 == 1/12) {
+print ("Subtsraction is correct")
+}else {
+print ( " Substraction is wrong" )
+}
+```
+Snippet 2 :
+```{r}
+x1 = 1
+x2 = 1/2
+if ( x1-x2 == 1/2) {
+  print ("Subtsraction is correct")
+}else {
+  print ( " Substraction is wrong" )
+}
+```
+Analysis :
+ In case of first snippet , 1/3 and 1/12 results in a number with infinite decimal part, ie to say that these fractions has no finite representation and so R rounds it up. So the resulting value of the subtraction is not exactly equal to each other. So snippet 1 gives out messsage "Substraction is wrong"
+ 
+But in case of snippet 2, 1/2 has a finite representation and hence snippet 2 gives out correct answer.
+
+To go around the problem with snippet 1 , we can use all.equal since it tests for 'near equity' of two objects.
+revised code for snippet 1
+
+```{r}
+x1 = 1/3 
+x2 = 1/4
+if (isTRUE(all.equal((x1 - x2),1/12))) {
+  print ("Subtsraction is correct")
+}else {
+  print ( " Substraction is wrong" )
+}
+
+```
+# Question 2: Derivative
+
+## Function to calculate derivative :
+
+```{r}
+f = function(x){x}
+
+derivative_func = function(f=f,x){
+  e = 10^-15
+  f1 = (f(x + e) - f(x)) / e
+  return(f1)
+}
+```
+## Evaluating function at x = 1 and x = 100000
+
+```{r}
+x1 = derivative_func(f,1)
+x1
+```
+```{r}
+x100000 = derivative_func(f,100000)
+x100000
+```
+
+## Results obtained and true values
+As f(x) = x , true value is e/e ie 1.
+
+For x = 1
+e is not considered to be very small when x = 1, so f(1+e) results in 1.0000000000000011 which is slighlty greater than 1, after this gets substracted with f(1), we get numerator slightly greater than denominator and when this gets divided by e due to underflow in r , we get the answer slightly bigger than 1.
+
+For x = 100000
+When x is 100000 , value of e is very small , this results in numerator being 0 due to underflow error. Hence we get derivative for this function for a large x as 0
+
+
+# Question 3: Variance
+
+## 1 My variance function
+
+```{r}
+myvar = function(x){
+  n = length(x)
+  x2 = 0
+  x1 = 0
+  for(i in 1:n){
+    x2 = x2 + x2^2
+    x1 = x1 + x1
+  }
+  var = 1/(1-n) * (x2 - (1/n) * x1^2)
+  return(var)
+}
+```
+
+## Generating x vector
+
+```{r}
+x = rnorm(10000, mean = 10^8, sd = 1)
+```
+
+## Plotting graph to compare the above variance function with var()
+
+```{r}
+n = length(x)
+i = 1:10000
+Yi = 0
+for( j in 1:n){
+  Yi[j] = myvar(x[1:j]) - var(x[1:j])
+}
+plot(x = i , y = Yi)
+
+```
+We can see there is difference between our variance function and var(). If there was no difference , we would have observed all the points to be at zero as there would be no difference. But from above graph we can see that most of the points are concentrated for -1. As the value of x increases , the summation of x^2 and x used in our formula will have overflow. This results in the difference of variances.
+
+## Better implementation variance estimator
+
+Trying to implement formula of sample variance , var = sum(x - xbar)^2 / n-1 to improve the results.
+
+```{r}
+better_var = function(x){
+  len = length(x)
+  x_bar = rep(mean(x),len)
+  v = (sum((x - x_bar)^2 ))/ (len-1)
+  return(v)
+}
+
+n = length(x)
+i = 1:10000
+Yii = 0
+j=0
+for( j in 1:n){
+  Yii[j] = better_var(x[1:j]) - var(x[1:j])
+}
+
+plot(x = i, y = Yii, ylim = c(-3,3))
+
+```
+This function gives better result as the difference plotted in the graph is concentrated at zero. This is because the x - xbar is done before summation is applied onto it , this tackles the overflow problem better than the function written before.
