@@ -2,11 +2,13 @@
 title: "Computational Statistics lab 1"
 author: "Shwetha , Suhani and Hoda"
 date: "11/4/2020"
-output: pdf_document
+output: 
+    pdf_document:
+      latex_engine: xelatex
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, comment = NA)
 ```
 
 # Question 1: Be careful when comparing
@@ -146,3 +148,112 @@ plot(x = i, y = Yii, ylim = c(-3,3))
 
 ```
 This function gives better result as the difference plotted in the graph is concentrated at zero. This is because the x - xbar is done before summation is applied onto it , this tackles the overflow problem better than the function written before.
+
+# Question 4: Binomial Coefficient
+
+A) prod(1:n)/(prod(1:k)∗prod(1:(n−k))) 
+B) prod((k+1):n)/prod(1:(n−k))    
+C) prod(((k+1):n)/(1:(n−k)))  
+
+
+**1.** For the above R expressions below values of n and k does not work properly     
+When k>n we will get answer -Inf/Inf instead of 0.
+
+```{r}
+n = 8
+k = 14
+prod(1:n)/(prod(1:k)*prod(1:(n-k)))      # A expression
+prod((k+1):n)/prod(1:(n-k))              # B expression
+prod(((k+1):n)/(1:(n-k)))                # C expression
+choose(n,k)
+```
+
+When k=n we will get answer Inf instead of 1.
+
+```{r}
+n = 8
+k = 8
+prod(1:n)/(prod(1:k)*prod(1:(n-k)))      # A expression
+prod((k+1):n)/prod(1:(n-k))              # B expression
+prod(((k+1):n)/(1:(n-k)))                # C expression
+choose(n,k)
+```
+
+When k<0 we will get answer -Inf/Inf instead of 0 for expression A.
+
+```{r}
+n = 10
+k = -12
+prod(1:n)/(prod(1:k)*prod(1:(n-k)))      # A expression
+prod((k+1):n)/prod(1:(n-k))              # B expression
+prod(((k+1):n)/(1:(n-k)))                # C expression
+choose(n,k)
+```
+
+**2.** 
+
+```{r}
+n = c(148, 148, 200, 320, 1500)
+k = c(101, 100, 179, 191, 990)
+i = 0
+for(i in 1:5){
+A = prod(1:n[i])/(prod(1:k[i])*prod(1:(n[i]-k[i])))
+B = prod((k[i]+1):n[i])/prod(1:(n[i]-k[i]))
+C = prod(((k[i]+1):n[i])/(1:(n[i]-k[i])))
+D = choose(n[i], k[i])
+print(A)
+print(B)
+print(C)
+print(D)
+}
+```
+## Plotting the results from above expressions
+
+```{r}  
+A = c(1.048632e+39, 2.206498e+39, NaN)                        
+B = c(1.048632e+39, 2.206498e+39, 1.383075e+28, NaN)                                                                    
+C = c(1.048632e+39, 2.206498e+39, 1.383075e+28, 2.300721e+92, Inf)
+D1 = c(1.048632e+39, 2.206498e+39, 1.383075e+28)
+D2 = c(1.048632e+39, 2.206498e+39, 1.383075e+28, 2.300721e+92) 
+D3 = c(1.048632e+39, 2.206498e+39, 1.383075e+28, 2.300721e+92, Inf)
+plot(A, D1, type = "o", col = "red")
+plot(B, D2, type = "o", col = "blue")
+plot(C, D3, type = "o", col = "orange")
+```
+
+**3.** For the below value of n and k, A expression gives Nan which is a overflow problem whereas B and C expressions produces the result. The A expression computes product from 1 to n (i.e.199) which exceeds the range of R. Hence it throws overflow problem first among 3 expressions.
+```{r}
+n = 199
+k = 197
+prod(1:n)/(prod(1:k)*prod(1:(n-k)))      # A expression
+prod((k+1):n)/prod(1:(n-k))              # B expression
+prod(((k+1):n)/(1:(n-k)))                # C expression
+choose(n,k)
+```
+
+For the below value of n and k, A and B expressions gives NaN which is a overflow problem whereas C expression produces the result. The B expression computes product from k+1 to n and k is smaller. Hence it throws overflow problem.
+```{r}
+n = 199
+k = 19
+prod(1:n)/(prod(1:k)*prod(1:(n-k)))      # A expression
+prod((k+1):n)/prod(1:(n-k))              # B expression
+prod(((k+1):n)/(1:(n-k)))                # C expression
+choose(n,k)
+```
+
+For the below value of n and k, A and B expressions gives Nan and C expression gives Inf which is a overflow problem. Both C expression and choose function(R built in function for binomial coefficient) gives same result. The C expression first computes the division operation and then prod() is used for the computed value. Here, the overflow problem occurs for very large numbers.
+```{r}
+n = 10037
+k = 997
+prod(1:n)/(prod(1:k)*prod(1:(n-k)))      # A expression
+prod((k+1):n)/prod(1:(n-k))              # B expression
+prod(((k+1):n)/(1:(n-k)))                # C expression
+choose(n,k)
+```
+
+Hence we can conclude that C expression calculates binomial coefficient for  very large numbers compared to A and B expressions.
+
+
+
+
+
