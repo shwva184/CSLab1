@@ -173,7 +173,7 @@ This function gives better result as the difference plotted in the graph is conc
 
 
 # Question 4: Binomial Coefficient
-```{r}
+```{r Question-4}
 
 # ------------------------------------------------------------------------------
 # A4
