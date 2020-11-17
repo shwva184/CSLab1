@@ -14,7 +14,7 @@ knitr::opts_chunk$set(echo = TRUE, comment = NA)
 # Question 1: Optimizing parameters
 
 ## 1
-
+Finding a0, a1, a2 that minimizes squared error between the selected function and interpolate function using optim()
 ```{r}
 parabolic_inter = function(a,x){
   a0 = a[1]
@@ -40,7 +40,7 @@ opt = function(x,func){
 ```
 
 ## 2
-
+Approximate function
 ```{r}
 approx = function(n,func){
  interval = 1/n
@@ -58,7 +58,6 @@ approx = function(n,func){
 ## 3
 
 **Comparing the result from f1(x) and parabolic interpolator function for 100 subintervals. **
-
 ```{r, echo = FALSE, fig.align='center'}
 f1 = function(x){
   res = -x *(1-x)
@@ -208,11 +207,6 @@ rownames(df) <- c("Convergence", "Mean", "Standard Deviation", "minusloglikeliho
 colnames(df) <- c("CG", "BFGS", "CG with gradient", "BFGS with gradient")
 knitr::kable(x = df, caption = "Comparison table of the different algorithms")
 ```
-
-
-# Appendix
-
-
 
 # Appendix 
 
