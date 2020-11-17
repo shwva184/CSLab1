@@ -2,11 +2,13 @@
 title: "Lab Assignment 2"
 author: "Shwetha Vandagadde, Suhani Ariga and Hoda Fakharzadeh"
 date: "11/16/2020"
-output: pdf_document
+output: 
+    pdf_document:
+      latex_engine: xelatex
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, comment = NA)
 ```
 
 # Question 1: Optimizing parameters
@@ -99,6 +101,114 @@ legend(0, 0.98, legend=c("f2(x)", "parabolic interpotator function"),
 ```
 
 Observing the above two plots , we can say that the prediction from piecewise parabolic interpolater was fair as the predictions has very low errors.
+
+### Question 2: Maximizing likelihood
+
+**1.** Load the data to R environment.
+```{r}
+load("data.RData")
+```
+
+**2.** 
+A sample from normal distribution with some parameters $\mu$, $\sigma$.
+
+The probability density function of normal distribution is:
+$$ f(y) = \frac{1}{\sigma\sqrt{2\pi}}e^{-\frac{(x-\mu)^2}{2\sigma^2}} $$
+We have the following n = 100 i.i.d observations:
+$$ x_1,x_2,...,x_n $$ 
+The likelihood function:
+$$ f(x_1,x_2,...,x_n|\sigma,\mu) = \prod_{i=1}^n\frac{1}{\sigma\sqrt{2\pi}}e^{-\frac{(x_i-\mu)^2}{2\sigma^2}} = (\frac{1}{\sigma\sqrt{2\pi}})^n e^{-\frac{1}{2\sigma^2}\sum_{i=1}^n{(x_i-\mu)}^2}$$
+The log likelihood function:
+$$ log(f(x_1,x_2,...,x_n|\sigma,\mu)) = log((\frac{1}{\sigma\sqrt{2\pi}})^n e^{-\frac{1}{2\sigma^2}\sum_{i=1}^n{(x_i-\mu)}^2})$$
+$$ = nlog\frac{1}{\sigma\sqrt{2\pi}}{-\frac{1}{2\sigma^2}\sum_{i=1}^n{(x_i-\mu)}^2} $$
+$$ = -\frac{n}{2}log{(2\pi)}-n log{\sigma} - \frac{1}{2\sigma^2}\sum_{i=1}^n(x_i-\mu)^2 $$
+Let's call $$ log(f(x_1,x_2,...,x_n|{\sigma,\mu})) $$ as $L$ and derivation of the log-likelihood by $\mu$  by setting partial derivatives to zero
+
+$$ \frac{\partial L}{\partial \mu} = -\frac{1}{2\sigma^2}\sum_{i=1}^n(x_i-\mu)^2 \mid \mu = 0 $$
+Solve this equation, we get
+
+$$ \frac{1}{2\sigma^2}\sum_{i=1}^n(2\hat{\mu} - 2x_i) = 0 $$
+Because ${\sigma^2}$ should be larger than 0,
+Mean of the sample
+$$ \hat{\mu} = \frac{\sum_{i=1}^{n} x_i}{n} $$
+Similarly, derivation of the log-likelihood by $\sigma$
+$$ \frac{\partial L}{\partial \sigma} = -\frac{n}{\sigma} + \sum_{i=1}^n (x_i-\mu)^2{\sigma}^{-3} = 0 $$
+Variance of the sample
+$$ \hat{\sigma}^2 = \frac{\sum_{i=1}^n(x_i - \hat\mu)^2}{n} $$
+Standard Deviation of the sample
+$$ \hat{\sigma} = \sqrt\frac{\sum_{i=1}^n(x_i - \hat\mu)^2}{n} $$
+
+```{r}
+mu_hat =  sum(data)/length(data)
+# formula for sigma 
+sigma_hat = sqrt(sum((data - mu_hat)^2)/length(data)) 
+cat(paste("Mean of data", mu_hat))
+cat(paste("Standard Deviation of data", sigma_hat))
+```
+
+
+**3.**
+Minus log–likelihood function with initial parameters µ = 0, σ = 1.
+```{r}
+minusloglikenormal = function(theta, x=data) {
+  mu<-theta[1]                   # mean of normal distribution
+  sigma2<-theta[2]               # variance of normal distribution
+  n = length(x)
+  a1 = (n/2)*log(2*pi)-(n/2)*log(sigma2)
+  a2 = (sum((x - mu)^2)) / (2 * sigma2^2)
+  ans = a1+a2
+  return(ans)
+}
+minusloglikenormal(c(0,1),data)
+```
+
+Gradient method
+
+```{r}
+gradient = function(theta, x = data) {
+  mu<-theta[1]
+  sigma2<-theta[2]
+  n = length(x)
+  dmu = sum(mu - x)/sigma2^2
+  dsig = (n/sigma2) - sum((x - mu)^2)/sigma2^3
+  gr = c(dmu,dsig)
+  return(gr)
+}
+gradient(c(0,1),data)
+# Conjugate Gradient method without gradient method:
+opt_cg <- optim(par = c(0, 1), fn = minusloglikenormal, method = "CG")
+
+# Conjugate Gradient method without gradient method:
+opt_cg_gr <- optim(par = c(0, 1), fn = minusloglikenormal, gr = gradient,  method = "CG")
+
+# BGFS method without gradient method:
+opt_bfgs <- optim(par = c(0, 1), fn = minusloglikenormal, method = "BFGS")
+
+# BGFS method with gradient method:
+opt_bfgs_gr <- optim(par = c(0, 1), fn = minusloglikenormal, gr = gradient, method = "BFGS")
+```
+
+It is more convenient to maximize the log of the likelihood function. Because the logarithm is monotonically increasing function of its argument, maximization of the log of a function is equivalent to maximization of the function itself. Taking the log not only simplifies the subsequent mathematical analysis, but it also helps numerically because the product of a large number of small probabilities can easily underflow the numerical precision of the computer, and this is resolved by computing instead the sum of the log probabilities.
+
+**4.**
+ Algorithms converge
+ 
+```{r}
+cg1 = c(opt_cg$convergence, opt_cg$par, opt_cg$value, opt_cg$counts[1], 
+        opt_cg$counts[2])
+cg2 = c(opt_cg_gr$convergence, opt_cg_gr$par, opt_cg_gr$value, 
+        opt_cg_gr$counts[1], opt_cg_gr$counts[2])
+bfgs1 = c(opt_bfgs$convergence, opt_bfgs$par, opt_bfgs$value, 
+          opt_bfgs$counts[1], opt_bfgs$counts[2])
+bfgs2 = c(opt_bfgs_gr$convergence, opt_bfgs_gr$par, opt_bfgs_gr$value, 
+          opt_bfgs_gr$counts[1], opt_bfgs_gr$counts[2])
+df <- as.data.frame(matrix(c(cg1, cg2, bfgs1, bfgs2), nrow=6))
+rownames(df) <- c("Convergence", "Mean", "Standard Deviation", "minusloglikelihood",
+                  "function evaluation", "gradient evaluation")
+colnames(df) <- c("CG", "BFGS", "CG with gradient", "BFGS with gradient")
+knitr::kable(x = df, caption = "Comparison table of the different algorithms")
+```
+
 
 # Appendix
 
