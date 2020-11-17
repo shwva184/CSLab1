@@ -213,6 +213,9 @@ knitr::kable(x = df, caption = "Comparison table of the different algorithms")
 # Appendix
 
 
+
+# Appendix 
+
 ```{r, ref.label=knitr::all_labels(), echo=TRUE, eval=FALSE}
 ```
 
