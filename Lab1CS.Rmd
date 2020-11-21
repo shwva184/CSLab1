@@ -115,13 +115,7 @@ When x is 100000 , value of e is very small , this results in numerator being 0 
 ```{r}
 myvar = function(x){
   n = length(x)
-  x2 = 0
-  x1 = 0
-  for(i in 1:n){
-    x2 = x2 + x2^2
-    x1 = x1 + x1
-  }
-  var = 1/(1-n) * (x2 - (1/n) * x1^2)
+  var = (1/(1-n)) * (sum(x^2) - ((1/n) * (sum(x))^2))
   return(var)
 }
 ```
@@ -144,7 +138,7 @@ for( j in 1:n){
 plot(x = i , y = Yi)
 
 ```
-We can see there is difference between our variance function and var(). If there was no difference , we would have observed all the points to be at zero as there would be no difference. But from above graph we can see that most of the points are concentrated for -1. As the value of x increases , the summation of x^2 and x used in our formula will have overflow. This results in the difference of variances.
+We can see there is difference between our variance function and var(). If there was no difference , we would have observed all the points to be at zero as there would be no difference. As the value of x increases , the summation of x^2 and x used in our formula will have overflow, hence the result is not accurate. This results in the difference of variances.
 
 ## Better implementation variance estimator
 
@@ -153,7 +147,7 @@ Trying to implement formula of sample variance , var = sum(x - xbar)^2 / n-1 to 
 ```{r}
 better_var = function(x){
   len = length(x)
-  x_bar = rep(mean(x),len)
+  x_bar = mean(x)
   v = (sum((x - x_bar)^2 ))/ (len-1)
   return(v)
 }

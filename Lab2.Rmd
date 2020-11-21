@@ -149,31 +149,27 @@ cat(paste("Standard Deviation of data", sigma_hat))
 **3.**
 Minus log–likelihood function with initial parameters µ = 0, σ = 1.
 ```{r}
-minusloglikenormal = function(theta, x=data) {
-  mu<-theta[1]                   # mean of normal distribution
-  sigma2<-theta[2]               # variance of normal distribution
-  n = length(x)
-  a1 = (n/2)*log(2*pi)-(n/2)*log(sigma2)
-  a2 = (sum((x - mu)^2)) / (2 * sigma2^2)
-  ans = a1+a2
+minusloglikenormal <- function(theta){
+  mu = theta[1]
+  sigma = theta[2]
+  n = length(data)
+  ans =  ((n/2) * log(2*pi * (sigma^2))) + (sum((data - mu)^2)) / (2 * sigma^2)
   return(ans)
 }
-minusloglikenormal(c(0,1),data)
 ```
 
 Gradient method
 
 ```{r}
-gradient = function(theta, x = data) {
-  mu<-theta[1]
-  sigma2<-theta[2]
-  n = length(x)
-  dmu = sum(mu - x)/sigma2^2
-  dsig = (n/sigma2) - sum((x - mu)^2)/sigma2^3
-  gr = c(dmu,dsig)
+gradient <- function(theta){
+  mu = theta[1]
+  sigma = theta[2]
+  n = length(data)
+  dMu = sum(mu - data)/(sigma^2)
+  dSigma = (n/sigma) - (sum((data-mu)^2)/(sigma^3))
+  gr = c(dMu,dSigma)
   return(gr)
 }
-gradient(c(0,1),data)
 # Conjugate Gradient method without gradient method:
 opt_cg <- optim(par = c(0, 1), fn = minusloglikenormal, method = "CG")
 
@@ -191,7 +187,6 @@ It is more convenient to maximize the log of the likelihood function. Because th
 
 **4.**
  Algorithms converge
- 
 ```{r}
 cg1 = c(opt_cg$convergence, opt_cg$par, opt_cg$value, opt_cg$counts[1], 
         opt_cg$counts[2])
@@ -204,9 +199,11 @@ bfgs2 = c(opt_bfgs_gr$convergence, opt_bfgs_gr$par, opt_bfgs_gr$value,
 df <- as.data.frame(matrix(c(cg1, cg2, bfgs1, bfgs2), nrow=6))
 rownames(df) <- c("Convergence", "Mean", "Standard Deviation", "minusloglikelihood",
                   "function evaluation", "gradient evaluation")
-colnames(df) <- c("CG", "BFGS", "CG with gradient", "BFGS with gradient")
+colnames(df) <- c("CG", "CG with gradient", "BFGS", "BFGS with gradient")
 knitr::kable(x = df, caption = "Comparison table of the different algorithms")
 ```
+The algorithms converged to the true value of $\mu$ and $\sigma$ in above mentioned all cases because it is generated from the normal distribution, where the log likelihood function is a continuous differentiable function that has only one global maximum. The results for different algorithms are same except for number of function and gradient evaluation. We need to choose algorithm with minimum runs of function evaluations. CG algorithm (with or without gradient) is not a best option because no of function evaluations are high. So it is better to avoid it as it makes algorithm slow and expensive in terms of computational resources. Hence BFGS with gradient is the best option.
+
 
 # Appendix 
 
