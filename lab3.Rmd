@@ -1,6 +1,6 @@
 ---
 title: "Lab 3"
-author: "Shwetha, Suhani , Hoda"
+author: "Shwetha Vandagadde, Suhani Ariga and Hoda Fakharzadeh"
 date: "11/21/2020"
 output: pdf_document
 ---
@@ -30,7 +30,8 @@ x = seq(0,50,length.out = 100)
 plot(x, f(x,c), type = "l", ylim = c(0,0.5),xlab = "", ylab = "")
 lines(x,fp(x,a,tmin),col="red")
 title("Powerlaw and target function")
-legend(30,0.5,legend = c("Powerlaw","Target function"), lty = 1, col = c("red","black"))
+legend(30,0.5,legend = c("Powerlaw","Target function"), 
+       lty = 1, col = c("red","black"))
 
 
 ```
@@ -38,7 +39,8 @@ The support for power law is from tmin to infinity , but our target function is 
 Since the max(f(x)) is achieved when the value of x is c^2/3, we have chosen tmin value to be the same, because powerlaw is strictly decreasing funtion and maximum of it will be at tmin. Alpha has been chosen by visually deciding which value makes powerlaw function similar to our target function.
 
 Majorizing density function is combination of uniform density and powerlaw density function.
-$$ Majority density = (probability*uniform density*1[0,tmin]) + (1-probability\space *\space powerlaw density*1[tmin,\inf] ) \\ where \space probablity = \int_0^{tmin} f(x) dx$$
+$$ Majority density = (probability*uniform density*1[0,tmin]) + (1-probability\space *\space powerlaw density*1[tmin,\inf] ) $$ 
+$$ where \space probablity = \int_0^{tmin} f(x) dx$$
 Then we can find majorizing constant as follows
 $$ MajoringConstant = max\left(\frac{f(x)}{majoritydensity(x)}\right) $$
 
@@ -78,7 +80,8 @@ rmajorizing<-function(n){
 }
 Nsample<-10000
 num_histbreaks<-100
-hist(rmajorizing(Nsample),breaks=2000,col="black",xlab="",ylab="",main="HistMajorizing",freq=FALSE, xlim = c(0,50))
+hist(rmajorizing(Nsample),breaks=2000,col="black",xlab="",ylab="",
+     main="HistMajorizing",freq=FALSE, xlim = c(0,50))
 
 accept_reject<-function(c,c_maj,t){
   x<-NA
@@ -106,13 +109,15 @@ set.seed(12345)
 c = c(1.1,1.5,2.5,3)
 p = 0.0833
 t = c(0.4033333,0.75,2.0833,3) # tmin chosen as c^2 / 3
-cm = c(max(f(x,1.1)/nd(x,a,t[1],p)),max(f(x,1.5)/nd(x,a,t[2],p)),max(f(x,2.5)/nd(x,a,t[3],p)),max(f(x,3)/nd(x,a,t[4],p)))
+cm = c(max(f(x,1.1)/nd(x,a,t[1],p)),max(f(x,1.5)/nd(x,a,t[2],p)),
+       max(f(x,2.5)/nd(x,a,t[3],p)),max(f(x,3)/nd(x,a,t[4],p)))
 mean=var=rejection_rate=c()
 for(i in 1:length(c)){
 tmin = t[i]
 fx_acceptreject<-sapply(rep(c[i],Nsample),accept_reject,c_maj = cm[i], t = tmin)
 
-hist(fx_acceptreject[1,],col="white",border = "black",breaks=10000,xlab="",ylab="",freq=FALSE,main="",xlim = c(0,50))
+hist(fx_acceptreject[1,],col="white",border = "black",breaks=10000,xlab="",
+     ylab="",freq=FALSE,main="",xlim = c(0,50))
 title(capture.output(cat("Accept/Reject samples when c is ", c[i])))
 mean =cbind(mean, mean(fx_acceptreject[,1]))
 var = cbind(var,var(fx_acceptreject[,1]))
