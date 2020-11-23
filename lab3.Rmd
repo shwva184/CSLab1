@@ -1,0 +1,155 @@
+---
+title: "Lab 3"
+author: "Shwetha, Suhani , Hoda"
+date: "11/21/2020"
+output: pdf_document
+---
+```{r setup, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(poweRlaw)
+```
+
+# 1
+
+```{r}
+f = function(x,c){
+  res = 0
+  res = c * ((sqrt(2*pi))^-1) * exp(-(c^2)/(2*x)) * x^(-3/2)
+  res[x<=0]<-0
+  return(res)
+}
+fp = function(x, a, tmin) {
+  return((a - 1 / tmin) * (x / tmin)^(-a))
+  }
+c = 2 
+tmin =  1.33 
+a = 1.1 
+x = seq(0,50,length.out = 100)
+plot(x, f(x,c), type = "l", ylim = c(0,0.5),xlab = "", ylab = "")
+lines(x,fp(x,a,tmin),col="red")
+title("Powerlaw and target function")
+legend(30,0.5,legend = c("Powerlaw","Target function"), lty = 1, col = c("red","black"))
+
+
+```
+The support for power law is from tmin to infinity , but our target function is on support from 0 to infinity. Hence we cannot use power law by itself. However we can combine it with uniform distribution for 0 to tmin support.
+Since the max(f(x)) is achieved when the value of x is c^2/3, we have choosen tmin value to be the same, because powerlaw is strictly decreasing funtion and maximum of it will be at tmin. Alpha has been choosen by visually deciding which value makes powerlaw function similar to our target function.
+
+Majorizing density function is combination of uniform density and powerlaw density function.
+$$ Majority density = (probability*uniform density*1[0,tmin]) + (1-probability\space *\space powerlaw density*1[tmin,\inf] ) \\ where \space probablity = \int_0^{tmin} f(x) dx$$
+Then we can find majorizing constant as follows
+$$ MajoringConstant = max\left(\frac{f(x)}{majoritydensity(x)}\right) $$
+
+```{r}
+p = 0.0832 #for c = 2
+#x = seq(0,100,length.out = 1000)
+max = max(f(x,c))
+nd = function(x,tmin,a,p){
+  res = c()
+  for(i in 1:length(x)){
+    if(x[i]>=0 && x[i]<= tmin){
+      res[i] = p * dunif(x[i],0,tmin)
+    }
+    if(x[i]>tmin){
+      res[i] = (1-p) * fp(x[i],a,tmin)
+    }
+  }
+  return(res)
+}
+
+c_maj = max(f(x,c)/as.vector(nd(x,tmin,a,p)))
+
+```
+
+# 2 
+
+Acceptance-rejection algorithm :
+```{r}
+
+a =2.5
+rmajorizing<-function(n){
+  sapply(1:n,function(i){
+    res<-NA
+    component<-sample(1:2,1,prob = c(0.0833,0.9167))
+    if(component==1){res<-runif(1,0,tmin)}
+    if(component==2){res<-rplcon(1,tmin,a)}
+    res
+  })
+}
+Nsample<-10000
+num_histbreaks<-100
+hist(rmajorizing(Nsample),breaks=1000,col="black",xlab="",ylab="",main="HistMajorizing",freq=FALSE, xlim = c(0,50))
+
+accept_reject<-function(c,c_maj,t){
+  x<-NA
+  num_reject<-0
+  while (is.na(x)){
+    y<-rmajorizing(1)
+    u<-runif(1)
+    if (u<=f(y,c)/(c_maj*nd(y,a,tmin = t,p))){
+      x<-y
+    } else{
+      num_reject<-num_reject+1
+    }
+  }
+ res = c(x,num_reject)
+ return(res)
+}
+
+```
+# 3
+Generating large samples from above sampler to different values of c. When we compare the results of f(x) for different 
+
+
+```{r}
+set.seed(10000)
+c = c(1.5,2,2.5)
+p = 0.833
+t = c(0.75,1.333333,2.083333) # tmin chosen as c^2 / 3
+cm = c(max(f(x,1)/nd(x,a,t[1],p)),max(f(x,3)/nd(x,a,t[2],p)),max(f(x,4)/nd(x,a,t[3],p)))
+mean=var=rejection_rate=c()
+for(i in 1:length(c)){
+tmin = t[i]
+fx_acceptreject<-sapply(rep(c[i],Nsample),accept_reject,c_maj = cm[i], t = tmin)
+
+hist(fx_acceptreject[1,],col="white",border = "black",breaks=10000,xlab="",ylab="",freq=FALSE,main="",xlim = c(0,50))
+title(capture.output(cat("Accept/Reject samples when c is ", c[i])))
+mean =cbind(mean, mean(fx_acceptreject[,1]))
+var = cbind(var,var(fx_acceptreject[,1]))
+rejection_rate = cbind(rejection_rate,sum(fx_acceptreject[,2])/Nsample)
+}
+```
+Mean for c = 1.5 is `r mean[1]`
+
+Mean for c = 2 is `r mean[2]`
+
+Mean for c = 2.5 is `r mean[3]`
+
+
+Variance for c = 1.5 is `r var[1]`
+
+Variance for c = 2 is `r var[2]`
+
+Variance for c = 2.5 is `r var[3]`
+
+
+Rejection rate for c = 1.5 is `r rejection_rate[1]`
+
+Rejection rate for c = 2 is `r rejection_rate[2]`
+
+Rejection rate for c = 2.5 is `r rejection_rate[3]`
+
+
+
+We can see that as value of c increases, the mean and variance also increases. This is because as c increases , target function peak moves further towards right on x as max of target function is achieved when x is c^2 / 3. As c increases , the max of target function decreases, hence reducing the sharp peaks and making it smoother. This inturn increases the values being sampled by accept reject algorithm, thus increasing mean and variance.
+Rejection rate also increases as the value of c increases. If we notice the majority constants with respect to c , we can observe that it increases with increase in c.
+Majority constant for c = 1.5 is `r cm[1]`. 
+Majority constant for c = 2 is `r cm[2]`. 
+Majority constant for c = 2.5 is `r cm[2]`. 
+As the majority constant increases , the proposal density goes way higher than our target density.
+This results in increase in number of rejections.
+
+
+
+
+# 2
