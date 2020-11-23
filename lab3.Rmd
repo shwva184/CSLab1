@@ -78,7 +78,7 @@ rmajorizing<-function(n){
 }
 Nsample<-10000
 num_histbreaks<-100
-hist(rmajorizing(Nsample),breaks=1000,col="black",xlab="",ylab="",main="HistMajorizing",freq=FALSE, xlim = c(0,50))
+hist(rmajorizing(Nsample),breaks=2000,col="black",xlab="",ylab="",main="HistMajorizing",freq=FALSE, xlim = c(0,50))
 
 accept_reject<-function(c,c_maj,t){
   x<-NA
@@ -102,11 +102,11 @@ Generating large samples from above sampler to different values of c. When we co
 
 
 ```{r}
-set.seed(10000)
-c = c(1.5,2,2.5)
-p = 0.833
-t = c(0.75,1.333333,2.083333) # tmin chosen as c^2 / 3
-cm = c(max(f(x,1)/nd(x,a,t[1],p)),max(f(x,3)/nd(x,a,t[2],p)),max(f(x,4)/nd(x,a,t[3],p)))
+set.seed(12345)
+c = c(1.1,1.5,2.5)
+p = 0.0833
+t = c(0.4033333,0.75,2.0833) # tmin chosen as c^2 / 3
+cm = c(max(f(x,1.1)/nd(x,a,t[1],p)),max(f(x,1.5)/nd(x,a,t[2],p)),max(f(x,2.5)/nd(x,a,t[3],p)))
 mean=var=rejection_rate=c()
 for(i in 1:length(c)){
 tmin = t[i]
@@ -119,34 +119,30 @@ var = cbind(var,var(fx_acceptreject[,1]))
 rejection_rate = cbind(rejection_rate,sum(fx_acceptreject[,2])/Nsample)
 }
 ```
-Mean for c = 1.5 is `r mean[1]`
+Mean for c = 1.1 is `r mean[1]`
 
-Mean for c = 2 is `r mean[2]`
+Mean for c = 1.5 is `r mean[2]`
 
 Mean for c = 2.5 is `r mean[3]`
 
 
-Variance for c = 1.5 is `r var[1]`
+Variance for c = 1.1 is `r var[1]`
 
-Variance for c = 2 is `r var[2]`
+Variance for c = 1.5 is `r var[2]`
 
 Variance for c = 2.5 is `r var[3]`
 
 
-Rejection rate for c = 1.5 is `r rejection_rate[1]`
+Rejection rate for c = 1.1 is `r rejection_rate[1]`
 
-Rejection rate for c = 2 is `r rejection_rate[2]`
+Rejection rate for c = 1.5 is `r rejection_rate[2]`
 
 Rejection rate for c = 2.5 is `r rejection_rate[3]`
 
 
 
 We can see that as value of c increases, the mean and variance also increases. This is because as c increases , target function peak moves further towards right on x as max of target function is achieved when x is c^2 / 3. As c increases , the max of target function decreases, hence reducing the sharp peaks and making it smoother. This inturn increases the values being sampled by accept reject algorithm, thus increasing mean and variance.
-Rejection rate also increases as the value of c increases. If we notice the majority constants with respect to c , we can observe that it increases with increase in c.
-Majority constant for c = 1.5 is `r cm[1]`. 
-Majority constant for c = 2 is `r cm[2]`. 
-Majority constant for c = 2.5 is `r cm[2]`. 
-As the majority constant increases , the proposal density goes way higher than our target density.
+Rejection rate also increases as the value of c increases.The proposal density goes way higher than our target density.
 This results in increase in number of rejections.
 
 
