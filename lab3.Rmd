@@ -146,6 +146,135 @@ Rejection rate also increases as the value of c increases.The proposal density g
 This results in increase in number of rejections.
 
 
+# Question 2: Laplace distribution
+
+```{r message=FALSE}
+library(VGAM)
+set.seed(12345)
+```
+The Laplace distribution is the distribution of the difference of two independent random variables with identical exponential distributions.
+
+$$ DE(\mu,\alpha) = \frac{\alpha}{2}\exp^{(-\alpha|x-\mu|)}$$
+By integrating f(x), CDF is given as :
+
+$$ F(x) = \int_{-\infty}^x f(x) dx$$
+$$ F(x) = \int_{-\infty}^x \frac{\alpha}{2}e^{-\alpha(x-\mu)} dx$$  $if (x>\mu)$
+$$ F(x) = 1-\int_{x}^\infty \frac{\alpha}{2}e^{-\alpha(x-\mu)} dx$$
+$$ F(x) = 1- \frac{1}{2}e^{-\alpha(x-\mu)} $$
+$$ F(x) = \int_{-\infty}^x \frac{\alpha}{2}e^{-\alpha(x-\mu)} dx$$  $if (x<=\mu)$
+$$ F(x) = \frac{1}{2}e^{\alpha(x-\mu)} $$
+Inverse of CDF
+
+For $if (x>\mu)$ we got $$ F(x) = \int_{-\infty}^x \frac{\alpha}{2}e^{-\alpha(x-\mu)} dx$$
+$$ y = 1- \frac{1}{2}e^{-\alpha(x-\mu)}$$
+$$ \frac{\ln(2-2y)-\alpha\mu}{-\alpha} = x$$
+So for $DE(0,1)$, $$ \frac{\ln(2-2y)-0}{-1} = x$$
+For $U \sim U(0,1)$, $$ -\ln(2-2U) = X$$
+$$ -\ln2(1-U) = X$$
+$$x\geqslant0 => \ln2(1-U) \leqslant 0 => 0 < 2(1-U) \leqslant 1 => 0 < (1-U) \leqslant \frac{1}{2} => -1 < -U \leqslant -\frac{1}{2} => \frac{1}{2} \leqslant U < 1 $$
+For $if (x<=\mu)$ we got $$ F(x) = \frac{1}{2}e^{\alpha(x-\mu)}$$
+$$ y = \frac{1}{2}e^{\alpha(x-\mu)}$$
+$$ \frac{\ln(2y)}{\alpha} + \mu = x$$
+So for $DE(0,1)$, $$ \frac{\ln(2y)}{1} + 0 = x$$
+For $U \sim U(0,1)$, $$ \ln(2U) = X$$
+$$ x<0 => 0<2U<1 => 0<U<\frac{1}{2}$$
+Hence inverse CDF equations are
+$$F^{-1}(U) = ln(2U)$$ for$0<U<\frac{1}{2}$
+$$F^{-1}(U) = -ln2(1-U)$$ for$\frac{1}{2}\leqslant U<1$
 
 
-# 2
+Generate 10000 random numbers from distribution
+```{r}
+#U <- runif(1000,0,1)
+inverse_cdf <- function(n){
+  U = runif(n,0,1)                        # generate random numbers from the known distribution 
+  X = c()
+  for(i in 1:length(U)){
+    if(U[i] < 0.5){
+      X[i] = log(2 * U[i])
+    }
+    else{
+      X[i] = -log(2 * (1 - U[i]))
+    }
+  }
+  return(X)
+}
+X = inverse_cdf(10000)
+data = rlaplace(10000,location = 0,scale = 1)
+df = data.frame(X,data)
+```
+
+Plot the generated numbers
+```{r}
+plot1 = hist(df$X, prob = TRUE, ylim = c(0,0.5), xlim = c(-10,10),
+breaks = 30, main = "Calculated Laplace Distribution")
+lines(density(df$X), col = "blue")
+```
+
+```{r}
+plot2 = hist(df$data, prob = TRUE, ylim = c(0,0.5), xlim = c(-10,10),
+breaks = 30, main = "Built in Laplace Distribution")
+lines(density(df$data), col = "blue")
+```
+The result looks reasonable. The two plots are similar. Due to mean = 0 all the points are close to 0 as shown in the plot. Conclusion, the results obtained using CDF function is close with the result using the rlaplace function.
+
+#2.2
+Use the Acceptance/rejection method with DE(0, 1) as a majorizing density to generate N (0, 1) variables.
+$$ f_X(x)\sim N(0,1) = \frac{1}{\sqrt{2\pi}} e^{-\frac{x^2}{2}} $$
+$$ f_Y(x) \sim DE(0,1) = \frac{1}{2} e^{-|x|} $$
+If we maximize the f_X(x)/f_Y(x) then it would be the value of c. This can be done with partial derivative of the fraction.
+$$\frac{f_X(x)}{f_Y(x)}\leq c$$
+$$C\geq \frac{2}{\sqrt{2\pi}}e^{|x|-\frac{x^2}{2}} $$
+$$g(x) = -\frac{x^2}{2}+x$$
+$$g^{\prime}(x) = 1-x$$
+$$1-x = 0 => x=1$$
+$$c = \frac{2}{\sqrt{2\pi}}e^{1-\frac{1^2}{2}} $$
+$$ = \frac{2}{\sqrt{2\pi}}\sqrt{e} $$
+By calculation, constant c = 1.3154
+
+Generation of 2000 random numbers from N(0,1)
+```{r}
+c = sqrt((2*exp(1))/pi)
+
+DE <- function(x){
+  exp(-abs(x)) / 2
+} 
+accept_reject <- function(n){
+  R <- 0
+  Y <- vector(length = n)
+  for(i in 1:n){
+    repeat {
+      y <- inverse_cdf(1)
+      U <- runif(1)
+      fy <- dnorm(y, mean = 0, sd = 1)
+      gy <- DE(y)
+      if(U <= fy / (c * gy)){
+        Y[i] <- y 
+        break
+        }
+      else{R = R+1}
+    }
+  }
+  return(list(Y=Y, Reject=R))
+}
+set.seed(12345)
+Z <- accept_reject(n = 2000)
+```
+
+Plot the histogram
+```{r}
+hist(Z$Y, xlab = "x",main="Random Numbers", breaks = 50)
+```
+```{r}
+cat("Expected Rejection Rate: ER = ", 1 - (1/c))
+cat("Rejection Rate: R = ", sum(Z$Reject)/(2000 +sum(Z$Reject)))
+```
+The expected rejection rate is 0.2398265 and the average rejection rate generated in accept_reject function() is 0.2392545. The difference is only 0.000572. Hence  expected rejection rate is very close to R. This means that our function for the random sample has satisfying results.
+
+Generate 2000 numbers from N (0, 1) using standard rnorm() procedure and plot the histogram
+```{r}
+set.seed(12345)
+hist(rnorm(2000,0,1), main = "Normal Random Numbers from rnorm()", xlab = "x", breaks = 50 )
+```
+Comparing 2 histograms we can conclude that the 2 results looks similar hence the function is efficient.
+
