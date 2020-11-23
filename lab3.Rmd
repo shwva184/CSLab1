@@ -9,7 +9,9 @@ knitr::opts_chunk$set(echo = TRUE)
 library(poweRlaw)
 ```
 
-# 1
+# Question 1: Stable distribution
+
+## 1
 
 ```{r}
 f = function(x,c){
@@ -23,7 +25,7 @@ fp = function(x, a, tmin) {
   }
 c = 2 
 tmin =  1.33 
-a = 1.1 
+a = 2.5 
 x = seq(0,50,length.out = 100)
 plot(x, f(x,c), type = "l", ylim = c(0,0.5),xlab = "", ylab = "")
 lines(x,fp(x,a,tmin),col="red")
@@ -33,7 +35,7 @@ legend(30,0.5,legend = c("Powerlaw","Target function"), lty = 1, col = c("red","
 
 ```
 The support for power law is from tmin to infinity , but our target function is on support from 0 to infinity. Hence we cannot use power law by itself. However we can combine it with uniform distribution for 0 to tmin support.
-Since the max(f(x)) is achieved when the value of x is c^2/3, we have choosen tmin value to be the same, because powerlaw is strictly decreasing funtion and maximum of it will be at tmin. Alpha has been choosen by visually deciding which value makes powerlaw function similar to our target function.
+Since the max(f(x)) is achieved when the value of x is c^2/3, we have chosen tmin value to be the same, because powerlaw is strictly decreasing funtion and maximum of it will be at tmin. Alpha has been chosen by visually deciding which value makes powerlaw function similar to our target function.
 
 Majorizing density function is combination of uniform density and powerlaw density function.
 $$ Majority density = (probability*uniform density*1[0,tmin]) + (1-probability\space *\space powerlaw density*1[tmin,\inf] ) \\ where \space probablity = \int_0^{tmin} f(x) dx$$
@@ -42,7 +44,6 @@ $$ MajoringConstant = max\left(\frac{f(x)}{majoritydensity(x)}\right) $$
 
 ```{r}
 p = 0.0832 #for c = 2
-#x = seq(0,100,length.out = 1000)
 max = max(f(x,c))
 nd = function(x,tmin,a,p){
   res = c()
@@ -61,12 +62,11 @@ c_maj = max(f(x,c)/as.vector(nd(x,tmin,a,p)))
 
 ```
 
-# 2 
+## 2 
 
 Acceptance-rejection algorithm :
 ```{r}
 
-a =2.5
 rmajorizing<-function(n){
   sapply(1:n,function(i){
     res<-NA
@@ -97,16 +97,16 @@ accept_reject<-function(c,c_maj,t){
 }
 
 ```
-# 3
+## 3
 Generating large samples from above sampler to different values of c. When we compare the results of f(x) for different 
 
 
 ```{r}
 set.seed(12345)
-c = c(1.1,1.5,2.5)
+c = c(1.1,1.5,2.5,3)
 p = 0.0833
-t = c(0.4033333,0.75,2.0833) # tmin chosen as c^2 / 3
-cm = c(max(f(x,1.1)/nd(x,a,t[1],p)),max(f(x,1.5)/nd(x,a,t[2],p)),max(f(x,2.5)/nd(x,a,t[3],p)))
+t = c(0.4033333,0.75,2.0833,3) # tmin chosen as c^2 / 3
+cm = c(max(f(x,1.1)/nd(x,a,t[1],p)),max(f(x,1.5)/nd(x,a,t[2],p)),max(f(x,2.5)/nd(x,a,t[3],p)),max(f(x,3)/nd(x,a,t[4],p)))
 mean=var=rejection_rate=c()
 for(i in 1:length(c)){
 tmin = t[i]
@@ -125,6 +125,8 @@ Mean for c = 1.5 is `r mean[2]`
 
 Mean for c = 2.5 is `r mean[3]`
 
+Mean for c = 3 is `r mean[4]`
+
 
 Variance for c = 1.1 is `r var[1]`
 
@@ -132,12 +134,16 @@ Variance for c = 1.5 is `r var[2]`
 
 Variance for c = 2.5 is `r var[3]`
 
+Variance for c = 3 is `r var[4]`
+
 
 Rejection rate for c = 1.1 is `r rejection_rate[1]`
 
 Rejection rate for c = 1.5 is `r rejection_rate[2]`
 
 Rejection rate for c = 2.5 is `r rejection_rate[3]`
+
+Rejection rate for c = 3 is `r rejection_rate[4]`
 
 
 
@@ -277,4 +283,10 @@ set.seed(12345)
 hist(rnorm(2000,0,1), main = "Normal Random Numbers from rnorm()", xlab = "x", breaks = 50 )
 ```
 Comparing 2 histograms we can conclude that the 2 results looks similar hence the function is efficient.
+
+# Appendix 
+
+```{r, ref.label=knitr::all_labels(), echo=TRUE, eval=FALSE}
+```
+
 
