@@ -22,7 +22,7 @@ f = function(x){
 ## 1
 
 Using Metropolis Hastings algorithm to generate samples from given distribution by using
-proposal distribution as log normal LN(Xt; 1), take 1 as starting point.
+proposal distribution as log normal LN(Xt; 1), taking 1 as starting point.
 
 ```{r}
 propose_lognorm_MCMC<-function(nstep,X0){
@@ -178,7 +178,9 @@ gg
 ```
 The model is noisy so a simple linear regression can not be used to describe the model. In the plot we have shown a second degree polynomial regression and log(x). Best on the plot, the second degree polynomial is the better choice.
 
-2. A researcher has decided to use the following (random-walk) Bayesian model (n=number of observations, $\vec{\mu} = (\mu_1, ..., \mu_n)$ are unknown parameters):
+## 2
+
+A researcher has decided to use the following (random-walk) Bayesian model (n=number of observations, $\vec{\mu} = (\mu_1, ..., \mu_n)$ are unknown parameters):
 $$ Y_i  = \mathcal{N}(\mu, \sigma = 0.2), i= 1,...,n$$
 where the prior is
 $$ p(\mu_1) = 1  $$
@@ -190,7 +192,7 @@ the PDF of Gaussian Distribution is :
 $$\mathcal{N}(\mu,\,\sigma^{2}) = \frac{1}{\sqrt{2\pi\sigma^2}}e^{-\frac{(\vec{y_i}-\vec{\mu_i})^2}{2\sigma^2}}$$
 and $\sigma^2 = 0.2$
 
-### 2.2 Likelihood:
+
 to obtain a formulae for likehood we should take product of this PDF:
 
 $$ P(\vec{Y}|\vec{\mu}) = \prod_{i=1}^n \frac{1}{\sqrt{2 \pi 0.2^2}} exp(-\frac{(y_i-\mu_i)^2}{2*0.2^2})= 
@@ -201,7 +203,7 @@ Prior formulae:
 $$ p(\vec{\mu}) = \prod_{i=1}^{n-1} \frac{1}{\sqrt{2 \pi* 0.2^2}} exp(-\frac{(\mu_{i+1}-\mu_i)^2}{2*0.2^2})$$
 $$P(\vec{\mu}) = \bigg{(}\frac{1}{\sqrt{2\pi*0.2^2}}\bigg{)}^n \text{exp} \Bigg{[} -\frac{1}{2*0.2^2}\sum_{i = 1}^{n-1}(\vec{\mu_{i+1}}-\vec{\mu_i})^2 \Bigg{]}$$
 
-### 2.3:
+## 3:
 Use Bayes' Theorem to get the posterior up to a constant proportionality, and then find out the distributions of $(\mu_i|\mu_{-i}, Y)$, where $\mu_{-i}$i is a vector containing all $\mu$ values except of $\mu_i$.
 
 From Bayes’ Theorem we know that:
@@ -220,7 +222,7 @@ $$P(\mu_1 | \vec\mu_{-1},\vec Y)  \propto \text{exp} \Bigg{[} -\frac{1}{2*0.2^2}
 
 $$P(\mu_n | \vec\mu_{-n},\vec Y)  \propto \text{exp} \Bigg{[} -\frac{1}{0.04} \bigg{[} \mu_n - \frac{y_n+\mu_{n-1}}{2} \bigg{]}^2 \Bigg{]})$$
 
-### 2.4
+## 4
 
 ```{r, warning=FALSE, message=FALSE,echo=FALSE}
 f.MCMC.Gibbs <- function (nsteps , mu0) {
@@ -280,7 +282,7 @@ gg2
 ```
 By using the formulae we calculated in 2.3 , we implemented a Gibbs Sampler. The algorithm ran for 1000 times. In 1000 time the Gibbs Sampler has not been able to capture the original data.
 
-### 2.5:
+## 5:
 trace plot of $\mu_n$ over its 1000 iterations.
 
 ```{r warning=FALSE,message=FALSE}
