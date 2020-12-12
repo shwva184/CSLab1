@@ -8,8 +8,10 @@ output: pdf_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+# Question 2: EM algorithm
 
-```{r}
+## 1.
+```{r, echo = FALSE}
 physical = read.csv("C:/Users/vcshw/OneDrive/Documents/CS/physical1.csv")
 plot(physical$X,physical$Y,xlab = "x", ylab = "Y and Z", col = "blue", type = "l",ylim = c(0,40))
 lines(physical$X,physical$Z,col="magenta")
@@ -19,7 +21,7 @@ legend(8,40,legend = c("Y","Z"),lty = 1, col = c("blue","magenta"))
 ```
 From the above plot we can observe that Z has some missing values , hence the discontinuity in plot. Z has a lot of peaks , intensity of peaks are higher at the beginning ie when x values are small and with increase in X the peak intensity reduces. Y also has a similar pattern as Z. For both Y and Z we can say that the variation when compared to X is high for smaller values of X and low for bigger values of X.
 
-#2
+## 2.
 
 There are missing values in Z. The model of Y and Z are as follows
 
@@ -36,7 +38,9 @@ $$L(\lambda) = \prod_{i = 1}^{n} \frac{X_i^2}{2\lambda^2}exp(-\frac{X_iY_i}{\lam
 $$L(\lambda) =  (\frac{1}{2\lambda^2})^nexp(-\sum_{i = 1}^{n}\frac{X_iY_i}{\lambda} +\frac{X_iZ_i}{2\lambda})\prod_{i = 1}^{n}X_i^2$$
 Log liklihood :
 
-$$\log(L(\lambda)) = -2n\log(\lambda) - \sum_{i = 1}^n\frac{X_iY_i}{\lambda} -\sum_{i = 1}^n\frac{X_iZ_i}{2\lambda} + \sum_{i = 1}^n X_i^2  $$
+$$\log(L(\lambda)) = -n\log(2)-2n\log(\lambda) - \sum_{i = 1}^n\frac{X_iY_i}{\lambda} -\sum_{i = 1}^n\frac{X_iZ_i}{2\lambda} + \sum_{i = 1}^n X_i^2 $$
+Terms which do not depend on lambda are can be written as C(constants).
+$$\log(L(\lambda)) = -2n\log(\lambda) - \sum_{i = 1}^n\frac{X_iY_i}{\lambda} -\sum_{i = 1}^n\frac{X_iZ_i}{2\lambda} + C $$
 We know that Z has missing values , so this can be split in to two parts.
 Z with known values :
 $$\sum_{known}\frac{X_iZ_i}{2\lambda}$$
@@ -44,9 +48,9 @@ Z with unknown values :
 $$\sum_{unknown}\frac{X_jZ_j}{2\lambda}$$
 $$\sum_{i=1}^n\frac{X_iZ_i}{2\lambda} = \sum_{known}\frac{X_iZ_i}{2\lambda} + \sum_{unknown}\frac{X_jZ_j}{2\lambda}$$
 Substituting this to log liklihood :
-$$\log(L(\lambda)) = -2n\log(\lambda) - \sum_{i = 1}^n\frac{X_iY_i}{\lambda} -\sum_{known}\frac{X_iZ_i}{2\lambda} - \sum_{unknown}\frac{X_jZ_j}{2\lambda} + \sum_{i = 1}^n X_i^2  $$
+$$\log(L(\lambda)) = -2n\log(\lambda) - \sum_{i = 1}^n\frac{X_iY_i}{\lambda} -\sum_{known}\frac{X_iZ_i}{2\lambda} - \sum_{unknown}\frac{X_jZ_j}{2\lambda} + C  $$
 Expected log liklihood :
-$$E[\log(L(\lambda))] = E\left[-2n\log(\lambda) - \sum_{i = 1}^n\frac{X_iY_i}{\lambda} -\sum_{known}\frac{X_iZ_i}{2\lambda} - \sum_{unknown}\frac{X_jZ_j}{2\lambda} + \sum_{i = 1}^n X_i^2\right]  $$
+$$E[\log(L(\lambda))] = E\left[-2n\log(\lambda) - \sum_{i = 1}^n\frac{X_iY_i}{\lambda} -\sum_{known}\frac{X_iZ_i}{2\lambda} - \sum_{unknown}\frac{X_jZ_j}{2\lambda} + C\right]  $$
 All terms other than the summation of unknown Z are on observed values. So the uncertainity is only in this term, so we need to calculate expected value for this term and rest are constant values hence expected value is the same.
 Zj represents the missing Z values , this can be estimated by using exponential distribution as follows:
 $$E[Z_j] =\frac{2\lambda_{prev}}{X_j} $$
@@ -54,7 +58,7 @@ $$E\left[\sum_{unknown}\frac{X_jZ_j}{2\lambda}\right]  = \sum_{unknown}\frac{X_j
 Where U is the number of unknown values in Z.
 
 E-Step is given by :
-$$E[\log(L(\lambda))] = -2n\log(\lambda) - \sum_{i = 1}^n\frac{X_iY_i}{\lambda} -\sum_{known}\frac{X_iZ_i}{2\lambda} - \frac{U\lambda{prev}}{\lambda} + \sum_{i = 1}^n X_i^2  $$
+$$E[\log(L(\lambda))] = -2n\log(\lambda) - \sum_{i = 1}^n\frac{X_iY_i}{\lambda} -\sum_{known}\frac{X_iZ_i}{2\lambda} - \frac{U\lambda{prev}}{\lambda} + C  $$
 For M step we just need to differentiate expected log liklihood wrt to lambda and equate it to 0 to find the estimate of lambda value, this will be the lambda value for next iteration.
 
 $$ \frac{\partial {E[\log(L(\lambda))]}}{\partial \lambda} = \frac{-2n}{\lambda} + \frac{1}{\lambda^2}\sum_{i = 1}^nX_iY_i +\frac{1}{2\lambda^2}\sum_{known}X_iZ_i + \frac{U \lambda_{prev}}{\lambda^2} = 0$$
@@ -62,14 +66,14 @@ $$\lambda_{mle} = \frac{1}{2n}\sum_{i = 1}^nX_iY_i +\frac{1}{4n}\sum_{known}X_iZ
 
 
 
+  
 
-
-#3 
+## 3.
 ```{r}
 n = nrow(physical)
 U = length(which(is.na(physical$Z)))
 known_z = which(!is.na(physical$Z))
-count = 0
+count = 1
 lambda_diff = Inf
 eps = 0.001 
 lambda = 100
@@ -78,18 +82,26 @@ repeat{
   lambda_diff = abs(lambda - lambda_new)
   lambda = lambda_new
   count = count + 1
-  print(lambda)
   if(lambda_diff < eps){break}
 }
 
 ```
-```{r}
+Optimal lambda is `r lambda`
+Number of iterations are `r count`
+
+## 4.
+
+```{r,echo = FALSE}
 e_y = lambda/physical$X
 e_z = 2*lambda/physical$X
-plot(physical$X,physical$Y,xlab = "x", ylab = "Y and Z", col = "blue", type = "l",ylim = c(0,40))
+plot(physical$X,physical$Y,xlab = "x", ylab = "Y and Z", col = "blue", type = "l",ylim = c(0,35))
 lines(physical$X,e_y,col="aquamarine2",lwd =2)
 lines(physical$X,physical$Z,col="magenta")
 lines(physical$X,e_z,col="pink2",lwd = 2)
-legend(8,40,legend = c("Y","Z","E[Y]","E[Z]"),lty = 1, col = c("blue","magenta","aquamarine2","pink2"))
+legend(8,35,legend = c("Y","Z","E[Y]","E[Z]"),lty = 1, col = c("blue","magenta","aquamarine2","pink2"))
 ```
+As Y and Z follow exponential distribution , their expected value will be as follows.
+$$E[Y] = \frac{\lambda}{X_i}$$
+$$E[Z] = \frac{2\lambda}{X_i}$$
+From the graph we can say that the computed lambda seems to be reasonable as both E[Y] and E[Z] lines seem to represent the mean of the actual plot pretty well. The variation with respect to X is higher in Z when compared to Y and even this is captured as the mean line of Z is higher than that of Y
 
