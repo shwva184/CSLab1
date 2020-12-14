@@ -1,12 +1,14 @@
 ---
 title: "Lab 6 "
-author: "Group 6: Shwetha Vandagadde, Suhani Ariga and Hoda Fakharzadeh"
+author: "Group 6: Shwetha Vandagadde, Suhani Ariga and Hoda Fakharzadehjahromy"
 date: \today
 output: 
   pdf_document:
     toc: true
     toc_depth: 2
 ---
+
+\newpage
 
 # Question 1: Genetic algorithm
 
@@ -56,7 +58,7 @@ library(ggplot2)
       x[order(GeneticFun(x),decreasing = TRUE)[1] ])
   #plot(GeneticFun(x))
   gg <- ggplot(data.frame(GeneticFun(x))) + 
-    geom_point(aes(x,GeneticFun(x)),color='darkblue') 
+    geom_point(aes(x,GeneticFun(x)),color='darkblue') +theme_minimal()
   gg
 ```
 
@@ -66,6 +68,7 @@ From the graph, It is clear the function is not Convex. This function contains  
 *b) Defines an initial population for the genetic algorithm as $X =(0, 5, 10, 15, . . . , 30)$ *
 
 *c) Computes vector `Values` that contains the function values for each population point*
+
 *d) Performs `maxiter` iterations where at each iteration*
 
 ```{r}
@@ -110,13 +113,14 @@ Q4Fun<-function(maxiter,mutprob){
     }
     
   ### V add plot to current Value
-  
+  x<- seq(0,30,0.5)
+  V<-GeneticFun(x)
+  df1<-  df1<-data.frame('X'=x,'Values'=V)
 
   df2 <- data.frame(X=X,Values=Values)
-  df2 <- df2[order(df2$Values,decreasing = TRUE),]
-  gg4<- ggplot() + 
+  gg4<- ggplot()+geom_line(data=df1,aes(x = X,y=Values,colour="function"))+
     geom_point(data=init_population, aes(X,Values,colour='initial population'))+ 
-    geom_point(data=df2, aes(X,Values,colour = "final"))
+    geom_point(data=df2, aes(X,Values,colour = "final"))+theme_minimal()
   gg4
   }
 
@@ -125,28 +129,36 @@ Q4Fun<-function(maxiter,mutprob){
 ## 1.5 *Run your code with different combinations of **maxiter**= 10, 100 and **mutprob**= 0.1, 0.5, 0.9. Observe the initial population and final population. Conclusions?*
 ```{r}
 set.seed(12345)
-p1 <- Q4Fun(maxiter = 10,mutprob = 0.1) +ggtitle("maxiter = 10,mutprob = 0.1")
+p1 <- Q4Fun(maxiter = 10,mutprob = 0.1) +ggtitle("maxiter = 10,mutprob = 0.1")+
+  theme(plot.title = element_text(size = 10))
 set.seed(12345)
-p2<- Q4Fun(10,0.5)+ ggtitle("maxiter = 10,mutprob = 0.5")
+p2<- Q4Fun(10,0.5)+ ggtitle("maxiter = 10,mutprob = 0.5")+
+      theme(plot.title = element_text(size = 10))
+
 set.seed(12345)
-p3<- Q4Fun(10,0.9)+ ggtitle("maxiter = 10,mutprob = 0.9")
+p3<- Q4Fun(10,0.9)+ ggtitle("maxiter = 10,mutprob = 0.9")+
+  theme(plot.title = element_text(size = 10))
 set.seed(12345)
-p4<- Q4Fun(100,0.1)+ ggtitle("maxiter = 100,mutprob = 0.1")
+p4<- Q4Fun(100,0.1)+ ggtitle("maxiter = 100,mutprob = 0.1")+
+  theme(plot.title = element_text(size = 10))
 set.seed(12345)
-p5<- Q4Fun(100,0.5) + ggtitle("maxiter = 100,mutprob = 0.5")
+p5<- Q4Fun(100,0.5) + ggtitle("maxiter = 100,mutprob = 0.5")+
+  theme(plot.title = element_text(size = 10))
 set.seed(12345)
-p6<- Q4Fun(100,0.9)+ ggtitle("maxiter = 100,mutprob = 0.9")
+p6<- Q4Fun(100,0.9)+ ggtitle("maxiter = 100,mutprob = 0.9")+
+  theme(plot.title = element_text(size = 10))
 library(gridExtra)
 genpicture<-grid.arrange(p1,p4,p2,p5,p3,p6,ncol=2)
 ```
 
-The higher the number of iteration the more accuracy we obtain. when `maxiter` equals to 10 there is a higher chance to stuck at a local `maximum`. Our second observation, is when the value of mutprob is low there is a higher chance for the algorithm to converge to the global maximum.
+In the graph, the first column is `maxiter`=$10$ and the second column is `maxiter`=$100$. Our first observation is the fact that the higher the number of iteration there is a higher chance of convergence to global optimum. When `maxiter` equals to 10 there is a higher probability for genetic algorithm to stuck at a local maximum or some irrelevant place, and miss the global maximum. Our second observation, is when the value of `mutprob` is high there is actually a higher chance for the algorithm to converge to the global maximum.In fact with `maxiter`=$100$ and `mutprob`= $0.1$ we can see that the algorithm stuck at a local maximum and fails to converge to global. we see better result when `mutprob`= $0.5$.
+when `mutprob`= $0.9$ the GA find several points near the global max as the function maximum, this could be due to the fact that GA has a discrete behavior while our problem is continuous.
 
 # Question 2: EM algorithm
 
 
 
-## 1. *The data file physical.csv describes a behavior of two related physical processes $Y = Y (X)$ and $Z = Z(X)$. Make a time series plot*
+## 2.1. *The data file physical.csv describes a behavior of two related physical processes $Y = Y (X)$ and $Z = Z(X)$. Make a time series plot*
 
 ```{r, echo = FALSE}
 physical = read.csv("physical1.csv")
@@ -158,7 +170,7 @@ legend(8,40,legend = c("Y","Z"),lty = 1, col = c("blue","magenta"))
 ```
 From the above plot we can observe that Z has some missing values , hence the discontinuity in plot. Z has a lot of peaks , intensity of peaks are higher at the beginning ie when x values are small and with increase in X the peak intensity reduces. Y also has a similar pattern as Z. For both Y and Z we can say that the variation when compared to X is high for smaller values of X and low for bigger values of X.
 
-## 2. *Derive an EM algorithm that estimates $\lambda$*
+## 2.2. *Derive an EM algorithm that estimates $\lambda$*
 
 There are missing values in Z. The model of Y and Z are as follows
 
@@ -205,7 +217,7 @@ $$\lambda_{mle} = \frac{1}{2n}\sum_{i = 1}^nX_iY_i +\frac{1}{4n}\sum_{known}X_iZ
 
   
 
-## 3. *Implement this algorithm in R use $\lambda_0=100$ and convergence criterion "stop if the change in $\lambda$ is less than 0.001*
+## 2.3. *Implement this algorithm in R use $\lambda_0=100$ and convergence criterion "stop if the change in $\lambda$ is less than 0.001*
 
 ```{r}
 n = nrow(physical)
@@ -227,7 +239,7 @@ repeat{
 Optimal lambda is `r lambda`
 Number of iterations are `r count`
 
-## 4. *Plot $E[Y]$ and $E[Z]$ versus X*
+## 2.4. *Plot $E[Y]$ and $E[Z]$ versus X*
 
 ```{r,echo = FALSE}
 e_y = lambda/physical$X
