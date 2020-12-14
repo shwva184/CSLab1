@@ -241,4 +241,11 @@ legend(8,35,legend = c("Y","Z","E[Y]","E[Z]"),lty = 1, col = c("blue","magenta",
 As Y and Z follow exponential distribution , their expected value will be as follows.
 $$E[Y] = \frac{\lambda}{X_i}$$
 $$E[Z] = \frac{2\lambda}{X_i}$$
-From the graph we can say that the computed lambda seems to be reasonable as both E[Y] and E[Z] lines seem to represent the mean of the actual plot pretty well. The variation with respect to X is higher in Z when compared to Y and even this is captured as the mean line of Z is higher than that of Y
+From the graph we can say that the computed lambda seems to be reasonable as both E[Y] and E[Z] lines seem to represent the mean of the actual plot pretty well. The variation with respect to X is higher in Z when compared to Y and 
+even this is captured as the mean line of Z is higher than that of Y
+
+\newpage
+
+# Appendix
+```{r ref.label=knitr::all_labels(), echo = T, eval = F}
+```
