@@ -21,11 +21,11 @@ f = function(x,c){
   return(res)
 }
 fp = function(x, a, tmin) {
-  return((a - 1 / tmin) * (x / tmin)^(-a))
+  return(((a - 1) / tmin) * (x / tmin)^(-a))
   }
 c = 2 
 tmin =  1.33 
-a = 2.5 
+a = 1.3
 x = seq(0,50,length.out = 100)
 plot(x, f(x,c), type = "l", ylim = c(0,0.5),xlab = "", ylab = "")
 lines(x,fp(x,a,tmin),col="red")
@@ -36,13 +36,27 @@ legend(30,0.5,legend = c("Powerlaw","Target function"),
 
 ```
 The support for power law is from tmin to infinity , but our target function is on support from 0 to infinity. Hence we cannot use power law by itself. However we can combine it with uniform distribution for 0 to tmin support.
-Since the max(f(x)) is achieved when the value of x is c^2/3, we have chosen tmin value to be the same, because powerlaw is strictly decreasing funtion and maximum of it will be at tmin. Alpha has been chosen by visually deciding which value makes powerlaw function similar to our target function.
+Since the max(f(x)) is achieved when the value of x is c^2/3, we have chosen tmin value to be the same, because powerlaw is strictly decreasing function and maximum of it will be at tmin. 
 
 Majorizing density function is combination of uniform density and powerlaw density function.
 $$ Majority density = (probability*uniform density*1[0,tmin]) + (1-probability\space *\space powerlaw density*1[tmin,\inf] ) $$ 
 $$ where \space probablity = \int_0^{tmin} f(x) dx$$
 Then we can find majorizing constant as follows
 $$ MajoringConstant = max\left(\frac{f(x)}{majoritydensity(x)}\right) $$
+We know that our majority density takes 2 parts ,
+1> When x<tmin , here f(x) = target function and g(x) is uniform density. Here we just need to find max(f(x)) as g(x) would just be a constant here , and max(f(x)) is achieved when x is c^2/3.
+$$f(x) = c(\sqrt{2\pi})^{-1} e^{\frac {-c^2} {2x}} x^{ \frac {-3}{2}} 1_{(0,\infty)}(x)$$
+$$log{f(xlog(c)-log(\sqrt2\pi)-\frac{c^2}{2x}-\frac{3}{2}\log(x)}$$
+
+$$\frac{\partial }{\partial x}\log(f(x))=\frac{c^2}{2x^2} - \frac{3}{2x} = 0$$
+
+$$x_{maj}=\frac{c^2}{3}$$
+2> When x > tmin, here g(x) is powerlaw
+
+$$\frac {\partial}{\partial x} \frac{f(x)}{g(x)} = \frac{3^{a-1} c^3 \frac{e^{-c^2}}{2 x} \left(\frac{x}{c^2}\right)^a \left((2 a-3) x+c^2\right)}{2 \sqrt{2 \pi } (a-1) x^{7/2}} = 0$$
+$$ x_{maj}=\frac{c^2}{3-2 a}$$
+ Now we can see the limitation on alpha , $a$ should be in the range from 1 and 1.5. Alpha greater than 1.5 will end up giving negetive majorising constant. Hence we are fixing our alpha to 1.3.
+
 
 ```{r}
 p = 0.0832 #for c = 2
@@ -60,8 +74,14 @@ nd = function(x,tmin,a,p){
   return(res)
 }
 
-c_maj = max(f(x,c)/as.vector(nd(x,tmin,a,p)))
+cmaj = function(c,a) {
+  xmaj <- (c^2)/(3-2*a)
+  return((f(xmaj,c)/(nd(xmaj,tmin,a,p))))
+}
+c_maj = cmaj(c,a)
 
+plot(f(x,c),type = "l", col = "blue",ylim = c(0,0.5))
+lines(nd(x,tmin,a,p)*c_maj, col = "red")
 ```
 
 ## 2 
@@ -69,25 +89,27 @@ c_maj = max(f(x,c)/as.vector(nd(x,tmin,a,p)))
 Acceptance-rejection algorithm :
 ```{r}
 
-rmajorizing<-function(n){
+rmajorizing<-function(n,tmin,a){
   sapply(1:n,function(i){
     res<-NA
-    component<-sample(1:2,1,prob = c(0.0833,0.9167))
+    component<-sample(1:2,1,prob = c(0.0833,1-0.0833))
     if(component==1){res<-runif(1,0,tmin)}
     if(component==2){res<-rplcon(1,tmin,a)}
     res
   })
 }
-Nsample<-10000
-num_histbreaks<-100
-hist(rmajorizing(Nsample),breaks=2000,col="black",xlab="",ylab="",
-     main="HistMajorizing",freq=FALSE, xlim = c(0,50))
+Nsample<-20000
+num_histbreaks<-1000
+hv = rmajorizing(Nsample,tmin,a)
+hist(hv[hv<2000],breaks=300,col="black",xlab="",ylab="",
+     main="HistMajorizing",freq=FALSE)
+
 
 accept_reject<-function(c,c_maj,t){
   x<-NA
   num_reject<-0
   while (is.na(x)){
-    y<-rmajorizing(1)
+    y<-rmajorizing(1,t,a)
     u<-runif(1)
     if (u<=f(y,c)/(c_maj*nd(y,a,tmin = t,p))){
       x<-y
@@ -106,55 +128,55 @@ Generating large samples from above sampler to different values of c. When we co
 
 ```{r}
 set.seed(12345)
-c = c(1.1,1.5,2.5,3)
+Nsample = 10000
+c = c(2,9,15)
 p = 0.0833
-t = c(0.4033333,0.75,2.0833,3) # tmin chosen as c^2 / 3
-cm = c(max(f(x,1.1)/nd(x,a,t[1],p)),max(f(x,1.5)/nd(x,a,t[2],p)),
-       max(f(x,2.5)/nd(x,a,t[3],p)),max(f(x,3)/nd(x,a,t[4],p)))
+t = c(4/3,81/3,15/3)
+cm = sapply(c,cmaj,a)
 mean=var=rejection_rate=c()
 for(i in 1:length(c)){
 tmin = t[i]
 fx_acceptreject<-sapply(rep(c[i],Nsample),accept_reject,c_maj = cm[i], t = tmin)
-
-hist(fx_acceptreject[1,],col="white",border = "black",breaks=10000,xlab="",
-     ylab="",freq=FALSE,main="",xlim = c(0,50))
+histvalue = fx_acceptreject[1,]
+histvalue = histvalue[histvalue<2000]
+hist(histvalue,col="white",border = "black",breaks=300,xlab="",
+     ylab="",freq=FALSE,main="")
 title(capture.output(cat("Accept/Reject samples when c is ", c[i])))
-mean =cbind(mean, mean(fx_acceptreject[,1]))
-var = cbind(var,var(fx_acceptreject[,1]))
-rejection_rate = cbind(rejection_rate,sum(fx_acceptreject[,2])/Nsample)
+mean =cbind(mean, mean(fx_acceptreject[1,]))
+var = cbind(var,var(fx_acceptreject[1,]))
+rejection_rate = cbind(rejection_rate,sum(fx_acceptreject[2,])/Nsample)
 }
 ```
-Mean for c = 1.1 is `r mean[1]`
+Mean for c = 5 is `r mean[1]`
 
-Mean for c = 1.5 is `r mean[2]`
+Mean for c = 10 is `r mean[2]`
 
-Mean for c = 2.5 is `r mean[3]`
-
-Mean for c = 3 is `r mean[4]`
+Mean for c = 15 is `r mean[3]`
 
 
-Variance for c = 1.1 is `r var[1]`
 
-Variance for c = 1.5 is `r var[2]`
+Variance for c = 5 is `r var[1]`
 
-Variance for c = 2.5 is `r var[3]`
+Variance for c = 10 is `r var[2]`
 
-Variance for c = 3 is `r var[4]`
+Variance for c = 15 is `r var[3]`
 
 
-Rejection rate for c = 1.1 is `r rejection_rate[1]`
 
-Rejection rate for c = 1.5 is `r rejection_rate[2]`
+Rejection rate for c = 5 is `r rejection_rate[1]`
 
-Rejection rate for c = 2.5 is `r rejection_rate[3]`
+Rejection rate for c = 10 is `r rejection_rate[2]`
 
-Rejection rate for c = 3 is `r rejection_rate[4]`
+Rejection rate for c = 15 is `r rejection_rate[3]`
+
 
 
 
 We can see that as value of c increases, the mean and variance also increases. This is because as c increases , target function peak moves further towards right on x as max of target function is achieved when x is c^2 / 3. As c increases , the max of target function decreases, hence reducing the sharp peaks and making it smoother. This inturn increases the values being sampled by accept reject algorithm, thus increasing mean and variance.
 Rejection rate also increases as the value of c increases.The proposal density goes way higher than our target density.
 This results in increase in number of rejections.
+
+We have obtained values much larger than 2000 from the sampling, but to nothice the distribution in the beginning where the curve can be observed , we have filtered out the values below 2000.
 
 
 # Question 2: Laplace distribution
